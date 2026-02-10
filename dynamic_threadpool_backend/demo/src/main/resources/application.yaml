@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: demo
+  profiles:
+    active: dev
+  config:
+    import: optional:nacos:dynamic-threadpool-demo.yaml
+  cloud:
+    nacos:
+      config:
+        server-addr: localhost:8848
+        #        username: nacos
+        #        password: nacos
+        file-extension: yaml
+
+xiaozhu:
+  # 启用动态线程池
+  dynamicPool: true
+  nacos:
+      dataId: dynamic-threadpool-demo.yaml
+      group: DEFAULT_GROUP
+
+logging:
+  level:
+    com.xiaozhu: DEBUG
+    com.example.demo: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health,info
+  metrics:
+    tags:
+      application: ${spring.application.name}

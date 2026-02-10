@@ -1,0 +1,124 @@
+# ===========================================
+# 动态线程池配置文件
+# ===========================================
+xiaozhu:
+  # 启用动态线程池
+  dynamicPool: true
+  nacos:
+    dataId: dynamic-threadpool-demo.yaml
+    group: DEFAULT_GROUP
+
+  # 监控配置
+  monitorConfig:
+    enable: true                          # 是否启用监控
+    collectType: micrometer               # 监控类型: micrometer(指标) 或 log(日志)
+    collectInterval: 5                    # 监控数据采集间隔(秒)
+
+  # 通知平台配置
+  notifyPlatforms:
+    platform: EMAIL                       # 通知平台: EMAIL, WECHAT, DINGTALK, MULTI(多个用逗号分隔)
+    email:
+      account: "1105774747@qq.com"         # 发件人邮箱账号
+      auth: "smsyyszososkbabg"             # 邮箱授权码
+      smtpHost: "smtp.qq.com"              # SMTP服务器地址(可选，默认QQ邮箱)
+      smtpPort: 465                        # SMTP端口(可选，默认465)
+
+    # 微信企业号配置示例(需要实现WechatMessageServiceImpl)
+    # wechat:
+    #   corpId: "your-corp-id"             # 企业ID
+    #   corpSecret: "your-corp-secret"     # 企业Secret
+    #   agentId: 1000001                   # 应用ID
+    #   toUsers: "user1,user2"             # 接收用户(多个用逗号分隔)
+
+    # 钉钉配置示例(需要实现DingTalkMessageServiceImpl)
+    # dingTalk:
+    #   webhookUrl: "https://oapi.dingtalk.com/robot/send"  # Webhook地址
+    #   accessToken: "your-access-token"    # 访问令牌
+    #   secret: "your-secret"               # 密钥
+
+  # 线程池配置集合 - 支持运行时动态修改
+  executors:
+    # 生产者线程池配置
+    - threadPoolId: "onethread-producer"   # 线程池唯一标识
+      corePoolSize: 2                      # 核心线程数
+      maximumPoolSize: 4                   # 最大线程数
+      keepAliveTime: 9999                  # 线程空闲存活时间(秒)
+      workQueue: "SynchronousQueue"        # 工作队列类型
+      rejectedHandler: "CallerRunsPolicy"  # 拒绝策略
+      queueCapacity: 0                     # 队列容量(0表示无界队列)
+      allowCoreThreadTimeOut: false        # 是否允许核心线程超时
+      notify:
+        receivers: "1105774747@qq.com"     # 通知接收者邮箱(多个用逗号分隔)
+        interval: 5                        # 通知间隔(分钟)
+      alarm:
+        enable: true                       # 是否启用告警
+        queueThreshold: 80                 # 队列使用率告警阈值(%)
+        activeThreshold: 80                # 活跃线程率告警阈值(%)
+
+    # 消费者线程池配置
+    - threadPoolId: "onethread-consumer"
+      corePoolSize: 4
+      maximumPoolSize: 6
+      keepAliveTime: 9999
+      workQueue: "SynchronousQueue"
+      rejectedHandler: "CallerRunsPolicy"
+      queueCapacity: 0
+      allowCoreThreadTimeOut: false
+      notify:
+        receivers: "1105774747@qq.com"
+        interval: 5
+      alarm:
+        enable: true
+        queueThreshold: 80
+        activeThreshold: 80
+
+    # 订单处理线程池配置
+    - threadPoolId: "order-executor"
+      corePoolSize: 5
+      maximumPoolSize: 20
+      keepAliveTime: 60
+      workQueue: "LinkedBlockingQueue"
+      rejectedHandler: "CallerRunsPolicy"
+      queueCapacity: 100
+      allowCoreThreadTimeOut: false
+      notify:
+        receivers: "1105774747@qq.com"
+        interval: 5
+      alarm:
+        enable: true
+        queueThreshold: 80
+        activeThreshold: 80
+
+    # 订单处理线程池配置
+    - threadPoolId: "order-executor2"
+      corePoolSize: 5
+      maximumPoolSize: 20
+      keepAliveTime: 60
+      workQueue: "LinkedBlockingQueue"
+      rejectedHandler: "CallerRunsPolicy"
+      queueCapacity: 100
+      allowCoreThreadTimeOut: false
+      notify:
+        receivers: "1105774747@qq.com"
+        interval: 5
+      alarm:
+        enable: true
+        queueThreshold: 80
+        activeThreshold: 80
+
+    # 用户处理线程池配置
+    - threadPoolId: "user-executor"
+      corePoolSize: 3
+      maximumPoolSize: 15
+      keepAliveTime: 30
+      workQueue: "LinkedBlockingQueue"
+      rejectedHandler: "DiscardOldestPolicy"
+      queueCapacity: 50
+      allowCoreThreadTimeOut: false
+      notify:
+        receivers: "1105774747@qq.com"
+        interval: 10
+      alarm:
+        enable: true
+        queueThreshold: 70
+        activeThreshold: 70

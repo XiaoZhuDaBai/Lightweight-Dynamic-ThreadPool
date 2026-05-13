@@ -9,8 +9,7 @@ import com.xiaozhu.executor.XiaozhuThreadExecutor;
 import com.xiaozhu.executor.XiaozhuThreadRegistry;
 import com.xiaozhu.notification.dto.ThreadPoolAlarmNotifyDTO;
 import com.xiaozhu.notification.service.NotifierDispatcher;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import org.springframework.beans.factory.DisposableBean;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -25,7 +24,7 @@ import java.util.concurrent.*;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class ThreadPoolAlarmChecker {
+public class ThreadPoolAlarmChecker implements DisposableBean {
     private final Map<String, Long> lastRejectCountMap = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(
             1,
@@ -44,9 +43,23 @@ public class ThreadPoolAlarmChecker {
         scheduler.scheduleWithFixedDelay(this::checkAlarm, 0, 10, TimeUnit.SECONDS);
     }
 
+    @Override
+    public void destroy() {
+        stop();
+    }
+
     public void stop() {
-        if (!scheduler.isShutdown()) {
+        if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
+            try {
+                if (!scheduler.awaitTermination(30, TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+                log.warn("ThreadPoolAlarmChecker 关闭被中断");
+            }
         }
     }
 
@@ -139,7 +152,6 @@ public class ThreadPoolAlarmChecker {
     }
 
 
-    @SneakyThrows
     private void sendAlarmMessage(String alarmType, ThreadPoolExecutorHolder holder) {
         ThreadPoolExecutor executor = holder.getExecutor();
         ThreadPoolExecutorProperties properties = holder.getExecutorProperties();
@@ -150,20 +162,29 @@ public class ThreadPoolAlarmChecker {
             rejectCount = ((XiaozhuThreadExecutor) executor).getRejectCount().get();
         }
 
-        int workQueueSize = queue.size(); // API 有锁，避免高频率调用
-        int remainingCapacity = queue.remainingCapacity(); // API 有锁，避免高频率调用
+        int workQueueSize = queue.size();
+        int remainingCapacity = queue.remainingCapacity();
+
+        String identify;
+        try {
+            identify = InetAddress.getLocalHost().getHostAddress();
+        } catch (java.net.UnknownHostException e) {
+            log.warn("无法获取本地主机地址，使用默认值: {}", e.getMessage());
+            identify = "unknown";
+        }
+
         ThreadPoolAlarmNotifyDTO alarm = ThreadPoolAlarmNotifyDTO.builder()
                 .applicationName(ApplicationProperties.getApplicationName())
                 .activeProfile(ApplicationProperties.getActiveProfile())
-                .identify(InetAddress.getLocalHost().getHostAddress())
+                .identify(identify)
                 .alarmType(alarmType)
                 .threadPoolId(holder.getThreadPoolId())
                 .corePoolSize(executor.getCorePoolSize())
                 .maximumPoolSize(executor.getMaximumPoolSize())
-                .activePoolSize(executor.getActiveCount())  // API 有锁，避免高频率调用
-                .currentPoolSize(executor.getPoolSize())  // API 有锁，避免高频率调用
-                .completedTaskCount(executor.getCompletedTaskCount())  // API 有锁，避免高频率调用
-                .largestPoolSize(executor.getLargestPoolSize())  // API 有锁，避免高频率调用
+                .activePoolSize(executor.getActiveCount())
+                .currentPoolSize(executor.getPoolSize())
+                .completedTaskCount(executor.getCompletedTaskCount())
+                .largestPoolSize(executor.getLargestPoolSize())
                 .workQueueName(queue.getClass().getSimpleName())
                 .workQueueSize(workQueueSize)
                 .workQueueRemainingCapacity(remainingCapacity)

@@ -13,7 +13,6 @@ import com.xiaozhu.notification.dto.ThreadPoolConfigChangeDTO;
 import com.xiaozhu.notification.service.NotifierDispatcher;
 import com.xiaozhu.support.ApplicationContextHolder;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.env.Environment;
@@ -181,14 +180,12 @@ public class DynamicThreadPoolRefreshListener implements ApplicationListener<Thr
      * @param originalProperties
      * @param remoteProperties
      */
-    @SneakyThrows
     private void sendThreadPoolConfigChangeMessage(ThreadPoolExecutorProperties originalProperties,
                                                    ThreadPoolExecutorProperties remoteProperties) {
         Environment environment = ApplicationContextHolder.getBean(Environment.class);
         String activeProfile = environment.getProperty("spring.profiles.active", "dev");
         String applicationName = environment.getProperty("spring.application.name");
 
-        // 储存变更前后的数据
         Map<String, ThreadPoolConfigChangeDTO.ChangePair<?>> changes = new HashMap<>();
         changes.put("corePoolSize", new ThreadPoolConfigChangeDTO.ChangePair<>(originalProperties.getCorePoolSize(), remoteProperties.getCorePoolSize()));
         changes.put("maximumPoolSize", new ThreadPoolConfigChangeDTO.ChangePair<>(originalProperties.getMaximumPoolSize(), remoteProperties.getMaximumPoolSize()));
@@ -196,15 +193,10 @@ public class DynamicThreadPoolRefreshListener implements ApplicationListener<Thr
         changes.put("rejectedHandler", new ThreadPoolConfigChangeDTO.ChangePair<>(originalProperties.getRejectedHandler(), remoteProperties.getRejectedHandler()));
         changes.put("keepAliveTime", new ThreadPoolConfigChangeDTO.ChangePair<>(originalProperties.getKeepAliveTime(), remoteProperties.getKeepAliveTime()));
 
-        // 获取接收人邮箱，优先级：线程池配置 > 全局邮件配置 > 默认值
         String receives = null;
-
-        // 优先从线程池配置获取
         if (remoteProperties.getNotify() != null) {
             receives = remoteProperties.getNotify().getReceivers();
         }
-
-        // 如果线程池配置中没有，则从全局邮件配置中获取
         if (receives == null || receives.trim().isEmpty()) {
             BootstrapConfigProperties.NotifyPlatformsConfig notifyConfig =
                 BootstrapConfigProperties.getInstance().getNotifyPlatforms();
@@ -212,8 +204,6 @@ public class DynamicThreadPoolRefreshListener implements ApplicationListener<Thr
                 receives = notifyConfig.getEmail().getReceivers();
             }
         }
-
-        // 如果还是没有，则使用发件人邮箱作为默认接收者
         if (receives == null || receives.trim().isEmpty()) {
             BootstrapConfigProperties.NotifyPlatformsConfig notifyConfig =
                 BootstrapConfigProperties.getInstance().getNotifyPlatforms();
@@ -221,15 +211,21 @@ public class DynamicThreadPoolRefreshListener implements ApplicationListener<Thr
                 receives = notifyConfig.getEmail().getAccount();
             }
         }
-
-        // 如果还是没有，则使用硬编码的默认值
         if (receives == null || receives.trim().isEmpty()) {
             receives = "1105774747@qq.com";
         }
 
+        String identify;
+        try {
+            identify = InetAddress.getLocalHost().getHostAddress();
+        } catch (java.net.UnknownHostException e) {
+            log.warn("无法获取本地主机地址，使用默认值: {}", e.getMessage());
+            identify = "unknown";
+        }
+
         ThreadPoolConfigChangeDTO configChangeDTO = ThreadPoolConfigChangeDTO.builder()
                 .activeProfile(activeProfile)
-                .identify(InetAddress.getLocalHost().getHostAddress())
+                .identify(identify)
                 .applicationName(applicationName)
                 .threadPoolId(originalProperties.getThreadPoolId())
                 .receives(receives)

@@ -19,7 +19,7 @@ xiaozhu:
     platform: EMAIL                       # 通知平台: EMAIL, WECHAT, DINGTALK, MULTI(多个用逗号分隔)
     email:
       account: "1105774747@qq.com"         # 发件人邮箱账号
-      auth: "smsyyszososkbabg"             # 邮箱授权码
+      auth: "smsyyszososkbabg"       # 邮箱授权码
       smtpHost: "smtp.qq.com"              # SMTP服务器地址(可选，默认QQ邮箱)
       smtpPort: 465                        # SMTP端口(可选，默认465)
 

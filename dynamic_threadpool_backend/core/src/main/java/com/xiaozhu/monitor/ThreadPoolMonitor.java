@@ -11,7 +11,6 @@ import com.xiaozhu.executor.XiaozhuThreadExecutor;
 import com.xiaozhu.executor.XiaozhuThreadRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Tag;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
@@ -20,13 +19,15 @@ import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.beans.factory.DisposableBean;
+
 /**
  * @author XiaoZhuDaBai
  * @version 1.0
  * @date 2025/8/18 15:52
  */
 @Slf4j
-public class ThreadPoolMonitor {
+public class ThreadPoolMonitor implements DisposableBean {
     private ScheduledExecutorService scheduler;
     private Map<String, ThreadPoolRuntimeInfo> micrometerMonitorCache;
 
@@ -74,9 +75,23 @@ public class ThreadPoolMonitor {
     /**
      * 停止定时检查任务
      */
+    @Override
+    public void destroy() {
+        stop();
+    }
+
     public void stop() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdown();
+            try {
+                if (!scheduler.awaitTermination(30, TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+                log.warn("ThreadPoolMonitor 关闭被中断");
+            }
         }
     }
 
@@ -117,7 +132,6 @@ public class ThreadPoolMonitor {
         return String.join(".", METRIC_NAME_PREFIX, name);
     }
 
-    @SneakyThrows
     private ThreadPoolRuntimeInfo buildThreadPoolRuntimeInfo(ThreadPoolExecutorHolder holder) {
         ThreadPoolExecutor executor = holder.getExecutor();
         BlockingQueue<?> queue = executor.getQueue();
@@ -128,18 +142,17 @@ public class ThreadPoolMonitor {
             rejectCount = atomicLong.get();
         }
 
-        int workQueueSize = queue.size(); // API 有锁，避免高频率调用
-        int remainingCapacity = queue.remainingCapacity(); // API 有锁，避免高频率调用
+        int workQueueSize = queue.size();
+        int remainingCapacity = queue.remainingCapacity();
 
-        // 构建 ThreadPoolRuntimeInfo
         return ThreadPoolRuntimeInfo.builder()
                 .threadPoolId(holder.getThreadPoolId())
                 .corePoolSize(executor.getCorePoolSize())
                 .maximumPoolSize(executor.getMaximumPoolSize())
-                .activePoolCount(executor.getActiveCount())  // API 有锁，避免高频率调用
-                .currentPoolSize(executor.getPoolSize())  // API 有锁，避免高频率调用
-                .completedTaskCount(executor.getCompletedTaskCount())  // API 有锁，避免高频率调用
-                .largestPoolSize(executor.getLargestPoolSize())  // API 有锁，避免高频率调用
+                .activePoolCount(executor.getActiveCount())
+                .currentPoolSize(executor.getPoolSize())
+                .completedTaskCount(executor.getCompletedTaskCount())
+                .largestPoolSize(executor.getLargestPoolSize())
                 .workQueueName(queue.getClass().getSimpleName())
                 .workQueueSize(workQueueSize)
                 .workQueueRemainingCapacity(remainingCapacity)

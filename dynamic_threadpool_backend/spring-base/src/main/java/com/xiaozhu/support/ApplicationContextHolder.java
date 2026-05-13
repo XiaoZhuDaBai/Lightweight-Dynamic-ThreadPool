@@ -32,6 +32,9 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @return 对应类型的 Bean 实例
      */
     public static <T> T getBean(Class<T> clazz) {
+        if (CONTEXT == null) {
+            throw new IllegalStateException("ApplicationContext has not been initialized");
+        }
         return CONTEXT.getBean(clazz);
     }
 
@@ -44,6 +47,9 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @return 对应的 Bean 实例
      */
     public static <T> T getBean(String name, Class<T> clazz) {
+        if (CONTEXT == null) {
+            throw new IllegalStateException("ApplicationContext has not been initialized");
+        }
         return CONTEXT.getBean(name, clazz);
     }
 
@@ -55,6 +61,9 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @return 包含所有匹配 Bean 的 Map，key 为 Bean 名称，value 为实例
      */
     public static <T> Map<String, T> getBeansOfType(Class<T> clazz) {
+        if (CONTEXT == null) {
+            throw new IllegalStateException("ApplicationContext has not been initialized");
+        }
         return CONTEXT.getBeansOfType(clazz);
     }
 
@@ -67,6 +76,9 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @return 注解实例，若不存在则返回 null
      */
     public static <A extends Annotation> A findAnnotationOnBean(String beanName, Class<A> annotationType) {
+        if (CONTEXT == null) {
+            throw new IllegalStateException("ApplicationContext has not been initialized");
+        }
         return CONTEXT.findAnnotationOnBean(beanName, annotationType);
     }
 
@@ -76,6 +88,9 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @param event Spring 事件
      */
     public static void publishEvent(ApplicationEvent event) {
+        if (CONTEXT == null) {
+            throw new IllegalStateException("ApplicationContext has not been initialized");
+        }
         CONTEXT.publishEvent(event);
     }
 

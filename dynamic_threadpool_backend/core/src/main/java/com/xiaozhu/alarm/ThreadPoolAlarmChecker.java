@@ -9,6 +9,7 @@ import com.xiaozhu.executor.XiaozhuThreadExecutor;
 import com.xiaozhu.executor.XiaozhuThreadRegistry;
 import com.xiaozhu.notification.dto.ThreadPoolAlarmNotifyDTO;
 import com.xiaozhu.notification.service.NotifierDispatcher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.DisposableBean;
 import lombok.extern.slf4j.Slf4j;
 

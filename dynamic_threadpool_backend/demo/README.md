@@ -47,7 +47,6 @@ java -jar target/demo-0.0.1-SNAPSHOT.jar
 # 测试邮件通知功能
 GET /dynamic-thread-pool/test/email
 ```
-```
 
 ## API接口
 

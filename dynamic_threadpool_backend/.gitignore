@@ -1,0 +1,32 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ====================
+# Runtime Data (DO NOT COMMIT)
+# ====================
+data/
+*.db
+*.log
+logs/
+
+# Docker volumes
+docker-compose.yml
+
+# Environment files (contain secrets)
+.env
+*.env
+
+# ====================
+# IDE
+# ====================
+.idea/
+*.iws
+*.iml
+*.ipr
+.idea/
+.xcodemap/
+.vscode/
+.DS_Store

@@ -99,12 +99,35 @@ public class DynamicThreadPoolAspect implements ApplicationContextAware {
                 findYamlProperties(threadPoolId, globalConfig);
 
         if (yamlProperties != null) {
-            // 使用YAML中的配置，合并实际的线程池参数
+            // 优先使用 Nacos 配置中的线程数参数，而不是本地代码中定义的
+            int corePoolSize = yamlProperties.getCorePoolSize() != null 
+                    ? yamlProperties.getCorePoolSize() 
+                    : executor.getCorePoolSize();
+            int maximumPoolSize = yamlProperties.getMaximumPoolSize() != null 
+                    ? yamlProperties.getMaximumPoolSize() 
+                    : executor.getMaximumPoolSize();
+            
+            // 如果 Nacos 配置的线程数与本地实例不同，先更新线程池实例
+            if (corePoolSize != executor.getCorePoolSize() || maximumPoolSize != executor.getMaximumPoolSize()) {
+                log.info("线程池 {} 使用 Nacos 配置参数: 核心={}, 最大={} (本地代码: 核心={}, 最大={})",
+                        threadPoolId, corePoolSize, maximumPoolSize, 
+                        executor.getCorePoolSize(), executor.getMaximumPoolSize());
+                try {
+                    executor.setCorePoolSize(corePoolSize);
+                    executor.setMaximumPoolSize(maximumPoolSize);
+                } catch (Exception e) {
+                    log.warn("线程池 {} 参数预调整失败，将使用本地参数注册: {}", threadPoolId, e.getMessage());
+                    corePoolSize = executor.getCorePoolSize();
+                    maximumPoolSize = executor.getMaximumPoolSize();
+                }
+            }
+
+            // 使用YAML中的配置，合并线程池参数
             ThreadPoolExecutorProperties properties =
                     ThreadPoolExecutorProperties.builder()
                     .threadPoolId(threadPoolId)
-                    .corePoolSize(executor.getCorePoolSize())
-                    .maximumPoolSize(executor.getMaximumPoolSize())
+                    .corePoolSize(corePoolSize)
+                    .maximumPoolSize(maximumPoolSize)
                     .keepAliveTime(executor.getKeepAliveTime(TimeUnit.SECONDS))
                     .workQueue(yamlProperties.getWorkQueue())
                     .rejectedHandler(yamlProperties.getRejectedHandler())
@@ -117,7 +140,7 @@ public class DynamicThreadPoolAspect implements ApplicationContextAware {
             // 注册到动态线程池系统
             XiaozhuThreadRegistry.register(threadPoolId, executor, properties);
             log.info("动态线程池注册成功: {} (核心: {}, 最大: {})",
-                    threadPoolId, executor.getCorePoolSize(), executor.getMaximumPoolSize());
+                    threadPoolId, corePoolSize, maximumPoolSize);
         } else {
             log.error("YAML配置中未找到线程池 '{}' 的配置，无法注册。请检查配置", threadPoolId);
         }

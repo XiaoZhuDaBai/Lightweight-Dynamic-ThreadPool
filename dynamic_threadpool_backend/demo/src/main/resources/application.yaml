@@ -12,16 +12,9 @@ spring:
     nacos:
       config:
         server-addr: localhost:8848
-        #        username: nacos
-        #        password: nacos
+        #        username: your-nacos-username
+        #        password: your-nacos-password
         file-extension: yaml
-
-xiaozhu:
-  # 启用动态线程池
-  dynamicPool: true
-  nacos:
-      dataId: dynamic-threadpool-demo.yaml
-      group: DEFAULT_GROUP
 
 logging:
   level:

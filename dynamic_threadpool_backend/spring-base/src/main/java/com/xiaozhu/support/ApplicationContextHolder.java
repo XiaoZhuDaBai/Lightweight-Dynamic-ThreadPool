@@ -76,9 +76,6 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @return 注解实例，若不存在则返回 null
      */
     public static <A extends Annotation> A findAnnotationOnBean(String beanName, Class<A> annotationType) {
-        if (CONTEXT == null) {
-            throw new IllegalStateException("ApplicationContext has not been initialized");
-        }
         return CONTEXT.findAnnotationOnBean(beanName, annotationType);
     }
 
@@ -88,9 +85,6 @@ public class ApplicationContextHolder implements ApplicationContextAware {
      * @param event Spring 事件
      */
     public static void publishEvent(ApplicationEvent event) {
-        if (CONTEXT == null) {
-            throw new IllegalStateException("ApplicationContext has not been initialized");
-        }
         CONTEXT.publishEvent(event);
     }
 

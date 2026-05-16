@@ -85,6 +85,10 @@ public abstract class AbstractDynamicThreadPoolRefresher implements ApplicationR
             log.warn("配置中没有找到线程池配置 (executors 字段为空或不存在)");
         }
 
+        // 重要：更新 BootstrapConfigProperties.INSTANCE，使后续线程池注册能获取到最新配置
+        BootstrapConfigProperties.setInstance(refresherProperties);
+        log.debug("BootstrapConfigProperties.INSTANCE 已更新");
+
         // 发布配置文件观察变更事件，通知观察者们进行线程池检查和变更
         log.info("发布线程池配置更新事件...");
         ApplicationContextHolder.publishEvent(new ThreadPoolConfigUpdateEvent(this, refresherProperties));

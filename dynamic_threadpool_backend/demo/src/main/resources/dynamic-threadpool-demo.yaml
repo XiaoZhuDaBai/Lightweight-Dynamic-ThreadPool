@@ -18,8 +18,8 @@ xiaozhu:
   notifyPlatforms:
     platform: EMAIL                       # 通知平台: EMAIL, WECHAT, DINGTALK, MULTI(多个用逗号分隔)
     email:
-      account: "1105774747@qq.com"         # 发件人邮箱账号
-      auth: "smsyyszososkbabg"       # 邮箱授权码
+      account: "your-email@example.com"       # 发件人邮箱账号
+      auth: "your-email-auth-code"            # 邮箱授权码
       smtpHost: "smtp.qq.com"              # SMTP服务器地址(可选，默认QQ邮箱)
       smtpPort: 465                        # SMTP端口(可选，默认465)
 
@@ -48,7 +48,7 @@ xiaozhu:
       queueCapacity: 0                     # 队列容量(0表示无界队列)
       allowCoreThreadTimeOut: false        # 是否允许核心线程超时
       notify:
-        receivers: "1105774747@qq.com"     # 通知接收者邮箱(多个用逗号分隔)
+        receivers: "your-receiver@example.com"     # 通知接收者邮箱(多个用逗号分隔)
         interval: 5                        # 通知间隔(分钟)
       alarm:
         enable: true                       # 是否启用告警
@@ -65,7 +65,7 @@ xiaozhu:
       queueCapacity: 0
       allowCoreThreadTimeOut: false
       notify:
-        receivers: "1105774747@qq.com"
+        receivers: "your-receiver@example.com"
         interval: 5
       alarm:
         enable: true
@@ -82,7 +82,7 @@ xiaozhu:
       queueCapacity: 100
       allowCoreThreadTimeOut: false
       notify:
-        receivers: "1105774747@qq.com"
+        receivers: "your-receiver@example.com"
         interval: 5
       alarm:
         enable: true
@@ -99,7 +99,7 @@ xiaozhu:
       queueCapacity: 100
       allowCoreThreadTimeOut: false
       notify:
-        receivers: "1105774747@qq.com"
+        receivers: "your-receiver@example.com"
         interval: 5
       alarm:
         enable: true
@@ -116,7 +116,7 @@ xiaozhu:
       queueCapacity: 50
       allowCoreThreadTimeOut: false
       notify:
-        receivers: "1105774747@qq.com"
+        receivers: "your-receiver@example.com"
         interval: 10
       alarm:
         enable: true

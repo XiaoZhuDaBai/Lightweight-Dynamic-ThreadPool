@@ -83,7 +83,7 @@ public class XiaozhuThreadExecutor extends ThreadPoolExecutor {
         log.info("关闭前还在执行的ExecutorService {}", threadPoolId);
         // 关闭
         try {
-            boolean awaitTermination = this.awaitTermination(this.awaitTerminationMillis, TimeUnit.SECONDS);
+            boolean awaitTermination = this.awaitTermination(this.awaitTerminationMillis, TimeUnit.MILLISECONDS);
             if (!awaitTermination) {
                 log.warn("等待该ExecutorService {} 终止执行.", threadPoolId);
             } else {
